@@ -1,0 +1,3 @@
+-I../build/gtest/src/gtest/include
+-I../build/gmock/src/gmock/include
+-I../src
