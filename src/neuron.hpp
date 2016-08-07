@@ -35,16 +35,23 @@ public:
     typedef typename std::shared_ptr<link> ptr;
     neuron::ptr neuron_back;
     double weight;
+    bool constant;
 
-    explicit link(const neuron::ptr &n_back, double w = 0.0)
-        : neuron_back(n_back), weight(w) {}
+    explicit link(const neuron::ptr &neuron_back_,
+                  double weight_,
+                  bool constant_) :
+                  neuron_back(neuron_back_),
+                  weight(weight_),
+                  constant(constant_) {}
   };
 
   virtual ~neuron();
 
-  link::ptr create_link(neuron::ptr neuron_back, double weight = 0.0);
-  int link_count() const;
-  link::ptr get_link(int index) const;
+  link::ptr create_link(neuron::ptr neuron_back,
+                        double weight,
+                        bool constant);
+  size_t link_count() const;
+  link::ptr get_link(size_t index) const;
 
   virtual bool activated() const = 0;
   virtual void compute() = 0;
@@ -80,6 +87,38 @@ class sigmoid_neuron : public neuron {
 public:
   sigmoid_neuron();
   virtual ~sigmoid_neuron();
+
+  virtual bool activated() const;
+  virtual void compute();
+  virtual double get_output() const;
+  virtual void set_output(double value);
+
+private:
+  struct prv;
+  std::shared_ptr<prv> d;
+};
+
+class linear_neuron : public neuron {
+public:
+  linear_neuron();
+  virtual ~linear_neuron();
+
+  virtual bool activated() const;
+  virtual void compute();
+  virtual double get_output() const;
+  virtual void set_output(double value);
+
+private:
+  struct prv;
+  std::shared_ptr<prv> d;
+};
+
+typedef linear_neuron output_neuron;
+
+class feedback_neuron : public neuron {
+public:
+  explicit feedback_neuron(size_t history_len);
+  virtual ~feedback_neuron();
 
   virtual bool activated() const;
   virtual void compute();

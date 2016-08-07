@@ -22,32 +22,18 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#ifndef __CONNECTOR_HPP
-#define __CONNECTOR_HPP
+#ifndef __STOP_FUNCTION_HPP
+#define __STOP_FUNCTION_HPP
 #include <memory>
 
-#include "neuron.hpp"
-
 namespace ga4nn {
-class internal_connector {
+template<class Population>
+class stop_function {
 public:
-  bool valid_connection(size_t back_index, size_t front_index) {
-    return true;
-  }
-  double weight() { return 0.0; }
-  bool constant() { return false; }
-};
-
-class feedback_connector {
-public:
-  bool valid_connection(size_t back_index, size_t front_index) {
-    if (back_index == front_index)
-      return true;
-    else
-      return false;
-  }
-  double weight() { return 1.0; }
-  bool constant() { return true; }
+  typedef Population population;
+  typedef typename std::shared_ptr<stop_function<population> > ptr;
+  virtual ~stop_function() {}
+  virtual bool done(typename population::ptr p) = 0;
 };
 }
 

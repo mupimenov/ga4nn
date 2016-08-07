@@ -50,7 +50,7 @@ TEST(sigmoid_neuron, compute) {
   mock_neuron *m = new mock_neuron;
 
   const double weight = 1.0;
-  n->create_link(neuron::ptr(m), weight);
+  n->create_link(neuron::ptr(m), weight, false);
 
   EXPECT_EQ(n->link_count(), 1);
 

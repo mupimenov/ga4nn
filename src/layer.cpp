@@ -27,17 +27,17 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace ga4nn {
 layer::~layer() {}
 
-int layer::neuron_count() const { return d_neuron.size(); }
+size_t layer::neuron_count() const { return d_neuron.size(); }
 
-neuron::ptr layer::get_neuron(int index) const {
+neuron::ptr layer::get_neuron(size_t index) const {
   if (index < 0 || index >= d_neuron.size())
     return neuron::ptr();
   return d_neuron[index];
 }
 
-int layer::connection_count() const { return d_connection.size(); }
+size_t layer::connection_count() const { return d_connection.size(); }
 
-layer::connection::ptr layer::get_connection(int index) const {
+layer::connection::ptr layer::get_connection(size_t index) const {
   if (index < 0 || index >= d_connection.size())
     return connection::ptr();
   return d_connection[index];
@@ -45,13 +45,13 @@ layer::connection::ptr layer::get_connection(int index) const {
 
 void layer::set_weights(std::vector<double>::const_iterator &first,
                         const std::vector<double>::const_iterator &last) {
-  for (int i = 0; (i < d_neuron.size()) && (first != last); ++i)
+  for (size_t i = 0; (i < d_neuron.size()) && (first != last); ++i)
     d_neuron[i]->set_weights(first, last);
 }
 
 std::vector<double> layer::get_weights() const {
   std::vector<double> weights;
-  for (int i = 0; i < d_neuron.size(); ++i) {
+  for (size_t i = 0; i < d_neuron.size(); ++i) {
     std::vector<double> neuron_weights = d_neuron[i]->get_weights();
     std::copy(neuron_weights.begin(), neuron_weights.end(),
               std::back_inserter(weights));
@@ -60,13 +60,13 @@ std::vector<double> layer::get_weights() const {
 }
 
 void layer::compute() {
-  for (int i = 0; i < d_neuron.size(); ++i)
+  for (size_t i = 0; i < d_neuron.size(); ++i)
     d_neuron[i]->compute();
 }
 
 void layer::set_outputs(std::vector<double>::const_iterator &first,
                         const std::vector<double>::const_iterator &last) {
-  for (int i = 0; (i < d_neuron.size()) && (first != last); ++i) {
+  for (size_t i = 0; (i < d_neuron.size()) && (first != last); ++i) {
     d_neuron[i]->set_output(*first);
     ++first;
   }
@@ -74,7 +74,7 @@ void layer::set_outputs(std::vector<double>::const_iterator &first,
 
 std::vector<double> layer::get_outputs() const {
   std::vector<double> outputs;
-  for (int i = 0; i < d_neuron.size(); ++i)
+  for (size_t i = 0; i < d_neuron.size(); ++i)
     outputs.push_back(d_neuron[i]->get_output());
   return outputs;
 }

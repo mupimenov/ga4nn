@@ -37,13 +37,13 @@ public:
   virtual ~neural_net();
 
   void add_layer(layer::ptr l);
-  int layer_count() const;
-  layer::ptr get_layer(int index) const;
+  size_t layer_count() const;
+  layer::ptr get_layer(size_t index) const;
 
   void set_weights(const std::vector<double> &weights);
   std::vector<double> get_weights() const;
 
-  std::vector<double> compute(const std::vector<double> input);
+  std::vector<double> compute(const std::vector<double> &input);
 
 private:
   struct prv;

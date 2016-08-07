@@ -22,32 +22,32 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#ifndef __CONNECTOR_HPP
-#define __CONNECTOR_HPP
+#ifndef __GENOTYPE_HPP
+#define __GENOTYPE_HPP
 #include <memory>
 
-#include "neuron.hpp"
-
 namespace ga4nn {
-class internal_connector {
+template<class Data>
+class genotype {
 public:
-  bool valid_connection(size_t back_index, size_t front_index) {
-    return true;
-  }
-  double weight() { return 0.0; }
-  bool constant() { return false; }
-};
+  typedef Data data_type;
+  typedef typename std::shared_ptr<genotype<data_type> > ptr;
+  explicit genotype(const data_type &data) : d_data(data) {}
+  virtual ~genotype() {}
 
-class feedback_connector {
-public:
-  bool valid_connection(size_t back_index, size_t front_index) {
-    if (back_index == front_index)
-      return true;
-    else
-      return false;
+  virtual double fitness() = 0;
+
+  virtual bool operator<(genotype<data_type> &g) {
+    return (fitness() < g.fitness());
   }
-  double weight() { return 1.0; }
-  bool constant() { return true; }
+
+  data_type &get_data() { return d_data; }
+  const data_type &get_data() const { return d_data; }
+  
+  void set_data(const data_type &data) { d_data = data; }
+
+protected:
+  data_type d_data;
 };
 }
 

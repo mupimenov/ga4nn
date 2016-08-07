@@ -40,6 +40,22 @@ public:
   sigmoid_neuron_factory();
   neuron::ptr create_neuron();
 };
+
+class linear_neuron_factory {
+public:
+  linear_neuron_factory();
+  neuron::ptr create_neuron();
+};
+
+typedef linear_neuron_factory output_neuron_factory;
+
+class feedback_neuron_factory {
+public:
+  feedback_neuron_factory();
+  neuron::ptr create_neuron();
+private:
+  size_t d_hystory_len;
+};
 }
 
 #endif

@@ -37,9 +37,9 @@ neural_net::~neural_net() {}
 
 void neural_net::add_layer(layer::ptr l) { d->layers.push_back(l); }
 
-int neural_net::layer_count() const { return d->layers.size(); }
+size_t neural_net::layer_count() const { return d->layers.size(); }
 
-layer::ptr neural_net::get_layer(int index) const {
+layer::ptr neural_net::get_layer(size_t index) const {
   if (index < 0 || index >= d->layers.size())
     return layer::ptr();
   return d->layers[index];
@@ -48,7 +48,7 @@ layer::ptr neural_net::get_layer(int index) const {
 void neural_net::set_weights(const std::vector<double> &weights) {
   std::vector<double>::const_iterator first = weights.begin();
   std::vector<double>::const_iterator last = weights.end();
-  for (int i = 0; i < d->layers.size() && first != last; ++i)
+  for (size_t i = 0; i < d->layers.size() && first != last; ++i)
     d->layers[i]->set_weights(first, last);
 }
 
@@ -56,7 +56,7 @@ std::vector<double> neural_net::get_weights() const {
   std::vector<double> weights;
   if (d->layers.size() < 2)
     return weights;
-  for (int i = 0; i < d->layers.size(); ++i) {
+  for (size_t i = 0; i < d->layers.size(); ++i) {
     std::vector<double> layer_weights = d->layers[i]->get_weights();
     std::copy(layer_weights.begin(), layer_weights.end(),
               std::back_inserter(weights));
@@ -64,13 +64,13 @@ std::vector<double> neural_net::get_weights() const {
   return weights;
 }
 
-std::vector<double> neural_net::compute(const std::vector<double> input) {
+std::vector<double> neural_net::compute(const std::vector<double> &input) {
   if (d->layers.size() < 2)
     return std::vector<double>();
   std::vector<double>::const_iterator first = input.begin();
   std::vector<double>::const_iterator last = input.end();
   d->layers[0]->set_outputs(first, last);
-  int i = 0;
+  size_t i = 0;
   for (; i < d->layers.size(); ++i)
     d->layers[i]->compute();
   return d->layers[i - 1]->get_outputs();

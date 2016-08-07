@@ -34,4 +34,14 @@ sigmoid_neuron_factory::sigmoid_neuron_factory() {}
 neuron::ptr sigmoid_neuron_factory::create_neuron() {
   return neuron::ptr(new sigmoid_neuron);
 }
+
+linear_neuron_factory::linear_neuron_factory() {}
+neuron::ptr linear_neuron_factory::create_neuron() {
+  return neuron::ptr(new linear_neuron);
+}
+
+feedback_neuron_factory::feedback_neuron_factory() : d_hystory_len(1) {}
+neuron::ptr feedback_neuron_factory::create_neuron() {
+  return neuron::ptr(new feedback_neuron(d_hystory_len++));
+}
 }

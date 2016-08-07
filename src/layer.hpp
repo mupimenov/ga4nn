@@ -44,29 +44,31 @@ public:
 
   ~layer();
 
-  template <class Factory> void add_neurons(Factory factory, int count) {
-    for (int i = 0; i < count; ++i)
+  template <class Factory> void add_neurons(Factory factory, size_t count) {
+    for (size_t i = 0; i < count; ++i)
       d_neuron.push_back(factory.create_neuron());
   }
 
-  int neuron_count() const;
-  neuron::ptr get_neuron(int index) const;
+  size_t neuron_count() const;
+  neuron::ptr get_neuron(size_t index) const;
 
   template <class Connector>
   void connect_back(const layer::ptr &l_back, Connector connector) {
-    for (int i = 0; i < d_neuron.size(); ++i) {
+    for (size_t i = 0; i < d_neuron.size(); ++i) {
       const neuron::ptr &n_front = d_neuron[i];
-      for (int j = 0; j < l_back->neuron_count(); ++j) {
+      for (size_t j = 0; j < l_back->neuron_count(); ++j) {
         neuron::ptr n_back = l_back->get_neuron(j);
-        if (connector.valid_connection(n_back, n_front))
+        if (connector.valid_connection(j, i))
           d_connection.push_back(connection::ptr(
-              new connection(n_back->create_link(n_front), n_front)));
+              new connection(n_front->create_link(n_back,
+                              connector.weight(),
+                              connector.constant()), n_front)));
       }
     }
   }
 
-  int connection_count() const;
-  connection::ptr get_connection(int index) const;
+  size_t connection_count() const;
+  connection::ptr get_connection(size_t index) const;
 
   void set_weights(std::vector<double>::const_iterator &first,
                    const std::vector<double>::const_iterator &last);

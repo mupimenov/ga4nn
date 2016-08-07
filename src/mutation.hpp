@@ -22,32 +22,18 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#ifndef __CONNECTOR_HPP
-#define __CONNECTOR_HPP
+#ifndef __MUTATION_HPP
+#define __MUTATION_HPP
 #include <memory>
 
-#include "neuron.hpp"
-
 namespace ga4nn {
-class internal_connector {
+template<class Genotype>
+class mutation {
 public:
-  bool valid_connection(size_t back_index, size_t front_index) {
-    return true;
-  }
-  double weight() { return 0.0; }
-  bool constant() { return false; }
-};
-
-class feedback_connector {
-public:
-  bool valid_connection(size_t back_index, size_t front_index) {
-    if (back_index == front_index)
-      return true;
-    else
-      return false;
-  }
-  double weight() { return 1.0; }
-  bool constant() { return true; }
+  typedef Genotype genotype;
+  typedef typename std::shared_ptr<mutation<genotype> > ptr;
+  virtual ~mutation() {}
+  virtual typename genotype::ptr mutate(typename genotype::ptr g) = 0;
 };
 }
 

@@ -39,23 +39,18 @@ class my_data {
 public:
   typedef std::shared_ptr<my_data> ptr;
   struct prime {
-    double x;
+    double x1;
+    double x2;
     double y;
-    prime() : x(0.0), y(0.0) {}
-    prime(double x_, double y_) : x(x_), y(y_) {}
+    prime() : x1(0.0), x2(0.0), y(0.0) {}
+    prime(double x1_, double x2_, double y_) : x1(x1_), x2(x2_), y(y_) {}
   };
 
-  my_data(double T, double dt, size_t points) : d_prime(points) {
-    double gain = dt / T;
-    double x = 0.0;
-    double y1 = 0.0;
-    for (size_t i = 0; i < points; i++) {
-      double dx = 1.0 / (points / 2);
-      x += i < (points / 2)? dx: -dx;
-      double y = y1 + gain * (x - y1);
-      d_prime[i] = prime(x, y);
-      y1 = y;
-    }
+  my_data() : d_prime(4) {
+    d_prime[0] = prime(0, 0, 0);
+    d_prime[1] = prime(0, 1, 1);
+    d_prime[2] = prime(1, 1, 0);
+    d_prime[3] = prime(1, 0, 1);
   }
 
   size_t points() const { return d_prime.size(); }
@@ -85,22 +80,16 @@ public:
     net->set_weights(d_data);
 
     d_fitval = 0.0;
-    double y1 = 0.0;
     for (size_t i = 0; i < data->points(); i++) {
       const my_data::prime &prime = data->get_prime(i);
-      input[0] = prime.x;
-      input[1] = y1;
+      input[0] = prime.x1;
+      input[1] = prime.x2;
       std::vector<double> output = net->compute(input);
-      y1 = output[0];
       double error = prime.y - output[0];
       d_fitval += (error * error);
     }
     d_computed = true;
     return d_fitval;
-  }
-
-  void reset() {
-    d_computed = false;
   }
 
   ga4nn::neural_net::ptr net;
@@ -147,7 +136,7 @@ public:
   typedef std::shared_ptr<my_population> ptr;
 };
 
-class my_selection : public ga4nn::b_selection<my_population> {
+class my_selection : public ga4nn::bm_selection<my_population> {
 public:
   typedef std::shared_ptr<my_selection> ptr;
 };
@@ -155,63 +144,52 @@ public:
 class my_crossover : public ga4nn::crossover<my_genotype> {
 public:
   typedef std::shared_ptr<my_crossover> ptr;
-  explicit my_crossover(double lambda0) :
-    d_lambda0(lambda0) {}
+  my_crossover(double bottom, double top, double gain) :
+    d_bottom(bottom),
+    d_top(top),
+    d_gain(gain) {}
   virtual std::vector<my_genotype::ptr> cross(
     const std::vector<my_genotype::ptr> &p) {
-    std::vector<my_genotype::ptr> vec(1);
-    std::vector<double> df_dx(p[0]->get_data().size());
-    const double dx = 0.0005;
-    double fitness = p[0]->fitness();
+    std::vector<my_genotype::ptr> vec(2);
+    std::vector<double> v(p[0]->get_data().size());
+    double len = 0.0;
+    for (size_t i = 0; i < v.size(); i++) {
+      v[i] = p[0]->get_data()[i] - p[1]->get_data()[i];
+      len += v[i] * v[i];
+    }
+    len = sqrt(len);
 
     vec[0] = my_genotype::ptr(
       new my_genotype(p[0]->net, p[0]->data, p[0]->get_data()));
-
-    for (size_t i = 0; i < df_dx.size(); ++i) {
-      vec[0]->get_data()[i] = p[0]->get_data()[i] + dx;
-      vec[0]->reset();
-      df_dx[i] = (vec[0]->fitness() - fitness) / dx;
-    }
-
-    double lambda = d_lambda0;
-    const size_t iter_count = 10;
-    for (size_t iter = 0; iter < iter_count; ++iter) {
-      for (size_t i = 0; i < p[0]->get_data().size(); ++i) {
-        vec[0]->get_data()[i] = p[0]->get_data()[i] - lambda * df_dx[i];
-      }
-      vec[0]->reset();
-      if (vec[0]->fitness() < p[0]->fitness())
-        break;
-      lambda /= 2.0;
-    }
-    if (vec[0]->fitness() > p[0]->fitness()) {
-      for (size_t i = 0; i < p[0]->get_data().size(); ++i)
-        vec[0]->get_data()[i] = p[0]->get_data()[i];
-    }
-#if 0
     vec[1] = my_genotype::ptr(
       new my_genotype(p[1]->net, p[1]->data, p[1]->get_data()));
-    lambda = d_lambda0;
-    for (size_t iter = 0; iter < iter_count; ++iter) {
-      for (size_t i = 0; i < p[1]->get_data().size(); ++i) {
-        if (dx[i] == 0.0) {
-          vec[1]->get_data()[i] = p[1]->get_data()[i];
-        } else {
-          double df_dx = df / dx[i];
-          vec[1]->get_data()[i] = p[1]->get_data()[i] + lambda * df_dx;
-        }
-      }
-      vec[1]->reset();
-      if (vec[1]->fitness() < p[1]->fitness())
-        break;
-      lambda /= 2.0;
-    }
+
+    if (len > 0.0) {
+      double delta = d_gain * (p[0]->fitness() / p[1]->fitness());
+      for (size_t i = 0; i < p[0]->get_data().size(); ++i) {
+        double d = (len + delta) / len * v[i];
+        vec[0]->get_data()[i] += d;
+        vec[1]->get_data()[i] += d;
+#if 1
+        if (vec[0]->get_data()[i] > d_top)
+          vec[0]->get_data()[i] = d_top - d / 2;
+        else if (vec[0]->get_data()[i] < d_bottom)
+          vec[0]->get_data()[i] = d_bottom + d / 2;
+
+        if (vec[1]->get_data()[i] > d_top)
+          vec[1]->get_data()[i] = d_top - d / 2;
+        else if (vec[1]->get_data()[i] < d_bottom)
+          vec[1]->get_data()[i] = d_bottom + d / 2;
 #endif
+      }
+    }
 
     return vec;
   }
 private:
-  double d_lambda0;
+  double d_bottom;
+  double d_top;
+  double d_gain;
 };
 
 class my_mutation : public ga4nn::mutation<my_genotype> {
@@ -220,8 +198,6 @@ public:
   explicit my_mutation(int propability_perc) :
     d_propability(propability_perc) { std::srand(std::time(0)); }
   virtual my_genotype::ptr mutate(my_genotype::ptr g) {
-    return g;
-
     const int gain = 1000;
     int r = std::rand() % (100 * gain);
     if (r < (d_propability * gain)) {
@@ -252,14 +228,14 @@ public:
       p->insert(b);
       p->insert(m);
 
-      if (!d_best)
-        d_best = b;
+      if (d_best) {
+        if (d_best->fitness() > b->fitness()) {
+          std::cout << "Epoch number= " << (d_counter + 1)
+            << "\tGenotype= " << b->fitness() << std::endl;
 
-      if (d_best && d_best->fitness() > b->fitness()) {
-        std::cout << "Epoch number= " << (d_counter + 1)
-          << "\tGenotype= " << b->fitness()
-          << "(" << m->fitness() << ")" << std::endl;
-
+          d_best = b;
+        }
+      } else {
         d_best = b;
       }
 
@@ -270,16 +246,14 @@ public:
     if (d_best) {
       d_best->net->set_weights(d_best->get_data());
       std::vector<double> input(2);
-      double y1 = 0.0;
       std::cout << "=== Result ===" << std::endl;
-      std::cout << "x\ty" << std::endl;
+      std::cout << "x1\tx2\ty" << std::endl;
       for (size_t i = 0; i < d_best->data->points(); i++) {
         const my_data::prime &prime = d_best->data->get_prime(i);
-        input[0] = prime.x;
-        input[1] = y1;
+        input[0] = prime.x1;
+        input[1] = prime.x2;
         std::vector<double> output = d_best->net->compute(input);
-        y1 = output[0];
-        std::cout << prime.x << "\t" << output[0] << std::endl;
+        std::cout << prime.x1 << "\t" << prime.x2 << "\t" << output[0] << std::endl;
       }
 
       for (size_t i = 0; i < d_best->get_data().size(); i++) {
@@ -302,10 +276,10 @@ int main(int argc, char const *argv[]) {
   input_layer->add_neurons(ga4nn::input_neuron_factory(), 2);
 
   ga4nn::layer::ptr hidden_layer(new ga4nn::layer);
-  hidden_layer->add_neurons(ga4nn::linear_neuron_factory(), 4);
+  hidden_layer->add_neurons(ga4nn::sigmoid_neuron_factory(), 5);
 
   ga4nn::layer::ptr output_layer(new ga4nn::layer);
-  output_layer->add_neurons(ga4nn::output_neuron_factory(), 1);
+  output_layer->add_neurons(ga4nn::sigmoid_neuron_factory(), 1);
 
   hidden_layer->connect_back(input_layer, ga4nn::internal_connector());
   output_layer->connect_back(hidden_layer, ga4nn::internal_connector());
@@ -315,27 +289,27 @@ int main(int argc, char const *argv[]) {
   net->add_layer(output_layer);
 
   my_population::ptr population(new my_population);
-  my_data::ptr data(new my_data(0.01, 0.001, 100));
+  my_data::ptr data(new my_data());
   std::cout << "=== Data ===" << std::endl;
-  std::cout << "x\ty" << std::endl;
+  std::cout << "x1\tx2\ty" << std::endl;
   for (size_t i = 0; i < data->points(); i++) {
     const my_data::prime &p = data->get_prime(i);
-    std::cout << p.x << "\t" << p.y << std::endl;
+    std::cout << p.x1 << "\t" << p.x2 << "\t" << p.y << std::endl;
   }
   my_genotype_creator::ptr genotype_creator(
     new my_genotype_creator(net, data,
-                            -1.0, 1.0,
+                            -10.0, 10.0,
                             net->get_weights().size()));
 
   ga4nn::fill_population<my_population,my_genotype_creator>(
     population,
     genotype_creator,
-    600);
+    1000);
 
   my_selection::ptr selection(new my_selection);
-  my_crossover::ptr crossover(new my_crossover(0.5));
+  my_crossover::ptr crossover(new my_crossover(-10.0, 10.0, 0.002));
   my_mutation::ptr mutation(new my_mutation(5));
-  my_stop_function::ptr stop_function(new my_stop_function(100));
+  my_stop_function::ptr stop_function(new my_stop_function(1000));
 
   std::cout << "=== Evolve ===" << std::endl;
 
