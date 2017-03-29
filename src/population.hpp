@@ -52,46 +52,46 @@ public:
   virtual ~rb_population() {}
 
   virtual void insert(typename genotype::ptr g) {
-    d_genotype.insert(std::pair<double, typename genotype::ptr>(g->fitness(), g));
+    m_genotype.insert(std::pair<double, typename genotype::ptr>(g->fitness(), g));
   }
   virtual typename genotype::ptr take_beauty() {
-    if (d_genotype.begin() == d_genotype.end())
+    if (m_genotype.begin() == m_genotype.end())
       return typename genotype::ptr();
     typename std::map<double, typename genotype::ptr>::iterator it =
-      d_genotype.begin();
+      m_genotype.begin();
     typename genotype::ptr g = it->second;
-    d_genotype.erase(d_genotype.begin());
+    m_genotype.erase(m_genotype.begin());
     return g;
   }
   virtual typename Genotype::ptr take_monster() {
-    if (d_genotype.begin() == d_genotype.end())
+    if (m_genotype.begin() == m_genotype.end())
       return typename genotype::ptr();
     typename std::map<double, typename genotype::ptr>::iterator it =
-      d_genotype.end();
+      m_genotype.end();
     --it;
     typename genotype::ptr g = it->second;
-    d_genotype.erase(it);
+    m_genotype.erase(it);
     return g;
   }
   virtual size_t count() const {
-    return d_genotype.size();
+    return m_genotype.size();
   }
   virtual void clear() {
-    d_genotype.clear();
+    m_genotype.clear();
   }
   virtual typename Genotype::ptr take_middle() {
-    if (d_genotype.begin() == d_genotype.end())
+    if (m_genotype.begin() == m_genotype.end())
       return typename genotype::ptr();
     typename std::map<double, typename genotype::ptr>::iterator it =
-      d_genotype.begin();
-    for (size_t i = 0; i < d_genotype.size() / 2; ++i)
+      m_genotype.begin();
+    for (size_t i = 0; i < m_genotype.size() / 2; ++i)
       ++it;
     typename genotype::ptr g = it->second;
-    d_genotype.erase(it);
+    m_genotype.erase(it);
     return g;
   }
 private:
-  std::multimap<double, typename genotype::ptr> d_genotype;
+  std::multimap<double, typename genotype::ptr> m_genotype;
 };
 }
 

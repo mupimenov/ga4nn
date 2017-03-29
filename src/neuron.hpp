@@ -65,7 +65,7 @@ public:
 protected:
   double forward();
 
-  std::vector<link::ptr> d_link;
+  std::vector<link::ptr> m_link;
 };
 
 class input_neuron : public neuron {

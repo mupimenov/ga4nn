@@ -54,7 +54,7 @@ public:
   feedback_neuron_factory();
   neuron::ptr create_neuron();
 private:
-  size_t d_hystory_len;
+  size_t m_hystory_len;
 };
 }
 

@@ -46,18 +46,18 @@ public:
     prime(double x1_, double x2_, double y_) : x1(x1_), x2(x2_), y(y_) {}
   };
 
-  my_data() : d_prime(4) {
-    d_prime[0] = prime(0, 0, 0);
-    d_prime[1] = prime(0, 1, 1);
-    d_prime[2] = prime(1, 1, 0);
-    d_prime[3] = prime(1, 0, 1);
+  my_data() : m_prime(4) {
+    m_prime[0] = prime(0, 0, 0);
+    m_prime[1] = prime(0, 1, 1);
+    m_prime[2] = prime(1, 1, 0);
+    m_prime[3] = prime(1, 0, 1);
   }
 
-  size_t points() const { return d_prime.size(); }
-  const prime &get_prime(size_t index) const { return d_prime[index]; }
+  size_t points() const { return m_prime.size(); }
+  const prime &get_prime(size_t index) const { return m_prime[index]; }
 
 private:
-  std::vector<prime> d_prime;
+  std::vector<prime> m_prime;
 };
 
 class my_genotype : public ga4nn::genotype<std::vector<double> > {
@@ -69,35 +69,35 @@ public:
     ga4nn::genotype<std::vector<double> >(weights_),
     net(net_),
     data(data_),
-    d_computed(false),
-    d_fitval(0.0) {}
+    m_computed(false),
+    m_fitval(0.0) {}
 
   virtual double fitness() {
-    if (d_computed)
-      return d_fitval;
+    if (m_computed)
+      return m_fitval;
 
     std::vector<double> input(2);
-    net->set_weights(d_data);
+    net->set_weights(get_data());
 
-    d_fitval = 0.0;
+    m_fitval = 0.0;
     for (size_t i = 0; i < data->points(); i++) {
       const my_data::prime &prime = data->get_prime(i);
       input[0] = prime.x1;
       input[1] = prime.x2;
       std::vector<double> output = net->compute(input);
       double error = prime.y - output[0];
-      d_fitval += (error * error);
+      m_fitval += (error * error);
     }
-    d_computed = true;
-    return d_fitval;
+    m_computed = true;
+    return m_fitval;
   }
 
   ga4nn::neural_net::ptr net;
   my_data::ptr data;
 
 private:
-  bool d_computed;
-  double d_fitval;
+  bool m_computed;
+  double m_fitval;
 };
 
 class my_genotype_creator : public ga4nn::genotype_creator<my_genotype> {
@@ -108,27 +108,28 @@ public:
                       double lower_bound,
                       double upper_bound,
                       size_t size) :
-    d_net(net),
-    d_data(data),
-    d_lower_bound(lower_bound),
-    d_upper_bound(upper_bound),
-    d_size(size) { std::srand(std::time(0)); }
+    m_net(net),
+    m_data(data),
+    m_lower_bound(lower_bound),
+    m_upper_bound(upper_bound),
+    m_size(size) { std::srand(std::time(0)); }
+
   my_genotype::ptr make() {
-    std::vector<double> weights(d_size);
+    std::vector<double> weights(m_size);
     const double precision = 1000.;
-    for (int i = 0; i < d_size; ++i) {
+    for (int i = 0; i < m_size; ++i) {
       weights[i] = (std::rand()
-        % static_cast<int>((d_upper_bound - d_lower_bound) * precision))
-        / precision + d_lower_bound;
+        % static_cast<int>((m_upper_bound - m_lower_bound) * precision))
+        / precision + m_lower_bound;
     }
-    return my_genotype::ptr(new my_genotype(d_net, d_data, weights));
+    return my_genotype::ptr(new my_genotype(m_net, m_data, weights));
   }
 private:
-  ga4nn::neural_net::ptr d_net;
-  my_data::ptr d_data;
-  double d_lower_bound;
-  double d_upper_bound;
-  size_t d_size;
+  ga4nn::neural_net::ptr m_net;
+  my_data::ptr m_data;
+  double m_lower_bound;
+  double m_upper_bound;
+  size_t m_size;
 };
 
 class my_population : public ga4nn::rb_population<my_genotype> {
@@ -145,9 +146,10 @@ class my_crossover : public ga4nn::crossover<my_genotype> {
 public:
   typedef std::shared_ptr<my_crossover> ptr;
   my_crossover(double bottom, double top, double gain) :
-    d_bottom(bottom),
-    d_top(top),
-    d_gain(gain) {}
+    m_bottom(bottom),
+    m_top(top),
+    m_gain(gain) {}
+
   virtual std::vector<my_genotype::ptr> cross(
     const std::vector<my_genotype::ptr> &p) {
     std::vector<my_genotype::ptr> vec(2);
@@ -165,42 +167,42 @@ public:
       new my_genotype(p[1]->net, p[1]->data, p[1]->get_data()));
 
     if (len > 0.0) {
-      double delta = d_gain * (p[0]->fitness() / p[1]->fitness());
+      double delta = m_gain * (p[0]->fitness() / p[1]->fitness());
       for (size_t i = 0; i < p[0]->get_data().size(); ++i) {
         double d = (len + delta) / len * v[i];
         vec[0]->get_data()[i] += d;
         vec[1]->get_data()[i] += d;
-#if 1
-        if (vec[0]->get_data()[i] > d_top)
-          vec[0]->get_data()[i] = d_top - d / 2;
-        else if (vec[0]->get_data()[i] < d_bottom)
-          vec[0]->get_data()[i] = d_bottom + d / 2;
 
-        if (vec[1]->get_data()[i] > d_top)
-          vec[1]->get_data()[i] = d_top - d / 2;
-        else if (vec[1]->get_data()[i] < d_bottom)
-          vec[1]->get_data()[i] = d_bottom + d / 2;
-#endif
+        if (vec[0]->get_data()[i] > m_top)
+          vec[0]->get_data()[i] = m_top - d / 2;
+        else if (vec[0]->get_data()[i] < m_bottom)
+          vec[0]->get_data()[i] = m_bottom + d / 2;
+
+        if (vec[1]->get_data()[i] > m_top)
+          vec[1]->get_data()[i] = m_top - d / 2;
+        else if (vec[1]->get_data()[i] < m_bottom)
+          vec[1]->get_data()[i] = m_bottom + d / 2;
       }
     }
 
     return vec;
   }
 private:
-  double d_bottom;
-  double d_top;
-  double d_gain;
+  double m_bottom;
+  double m_top;
+  double m_gain;
 };
 
 class my_mutation : public ga4nn::mutation<my_genotype> {
 public:
   typedef std::shared_ptr<my_mutation> ptr;
   explicit my_mutation(int propability_perc) :
-    d_propability(propability_perc) { std::srand(std::time(0)); }
+    m_propability(propability_perc) { std::srand(std::time(0)); }
+
   virtual my_genotype::ptr mutate(my_genotype::ptr g) {
     const int gain = 1000;
     int r = std::rand() % (100 * gain);
-    if (r < (d_propability * gain)) {
+    if (r < (m_propability * gain)) {
       int pos1 = std::rand() % g->get_data().size();
       int pos2 = std::rand() % g->get_data().size();
       double tmp = g->get_data()[pos1];
@@ -211,62 +213,59 @@ public:
   }
 
 private:
-  int d_propability;
+  int m_propability;
 };
 
 class my_stop_function : public ga4nn::stop_function<my_population> {
 public:
   typedef std::shared_ptr<my_stop_function> ptr;
   explicit my_stop_function(size_t epoch_number) :
-    d_counter(0),
-    d_epoch_number(epoch_number) {}
+    m_counter(0),
+    m_epoch_number(epoch_number) {}
   virtual bool done(my_population::ptr p) {
-    if (d_counter < d_epoch_number) {
+    if (m_counter < m_epoch_number) {
       my_genotype::ptr b = p->take_beauty();
       my_genotype::ptr m = p->take_monster();
 
       p->insert(b);
       p->insert(m);
 
-      if (d_best) {
-        if (d_best->fitness() > b->fitness()) {
-          std::cout << "Epoch number= " << (d_counter + 1)
-            << "\tGenotype= " << b->fitness() << std::endl;
+      if (!m_best
+        || (m_best && m_best->fitness() > b->fitness())) {
+        std::cout << "Epoch number= " << (m_counter + 1)
+          << "\tGenotype= " << b->fitness() << std::endl;
 
-          d_best = b;
-        }
-      } else {
-        d_best = b;
+        m_best = b;
       }
 
-      ++d_counter;
+      ++m_counter;
       return false;
     }
 
-    if (d_best) {
-      d_best->net->set_weights(d_best->get_data());
+    if (m_best) {
+      m_best->net->set_weights(m_best->get_data());
       std::vector<double> input(2);
       std::cout << "=== Result ===" << std::endl;
       std::cout << "x1\tx2\ty" << std::endl;
-      for (size_t i = 0; i < d_best->data->points(); i++) {
-        const my_data::prime &prime = d_best->data->get_prime(i);
+      for (size_t i = 0; i < m_best->data->points(); i++) {
+        const my_data::prime &prime = m_best->data->get_prime(i);
         input[0] = prime.x1;
         input[1] = prime.x2;
-        std::vector<double> output = d_best->net->compute(input);
+        std::vector<double> output = m_best->net->compute(input);
         std::cout << prime.x1 << "\t" << prime.x2 << "\t" << output[0] << std::endl;
       }
 
-      for (size_t i = 0; i < d_best->get_data().size(); i++) {
-        std::cout << d_best->get_data()[i] << std::endl;
+      for (size_t i = 0; i < m_best->get_data().size(); i++) {
+        std::cout << m_best->get_data()[i] << std::endl;
       }
     }
 
     return true;
   }
 private:
-  size_t d_counter;
-  size_t d_epoch_number;
-  my_genotype::ptr d_best;
+  size_t m_counter;
+  size_t m_epoch_number;
+  my_genotype::ptr m_best;
 };
 
 int main(int argc, char const *argv[]) {

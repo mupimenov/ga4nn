@@ -46,7 +46,7 @@ public:
 
   template <class Factory> void add_neurons(Factory factory, size_t count) {
     for (size_t i = 0; i < count; ++i)
-      d_neuron.push_back(factory.create_neuron());
+      m_neuron.push_back(factory.create_neuron());
   }
 
   size_t neuron_count() const;
@@ -54,12 +54,12 @@ public:
 
   template <class Connector>
   void connect_back(const layer::ptr &l_back, Connector connector) {
-    for (size_t i = 0; i < d_neuron.size(); ++i) {
-      const neuron::ptr &n_front = d_neuron[i];
+    for (size_t i = 0; i < m_neuron.size(); ++i) {
+      const neuron::ptr &n_front = m_neuron[i];
       for (size_t j = 0; j < l_back->neuron_count(); ++j) {
         neuron::ptr n_back = l_back->get_neuron(j);
         if (connector.valid_connection(j, i))
-          d_connection.push_back(connection::ptr(
+          m_connection.push_back(connection::ptr(
               new connection(n_front->create_link(n_back,
                               connector.weight(),
                               connector.constant()), n_front)));
@@ -81,8 +81,8 @@ public:
   std::vector<double> get_outputs() const;
 
 protected:
-  std::vector<neuron::ptr> d_neuron;
-  std::vector<connection::ptr> d_connection;
+  std::vector<neuron::ptr> m_neuron;
+  std::vector<connection::ptr> m_connection;
 };
 }
 

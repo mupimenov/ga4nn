@@ -32,7 +32,7 @@ class genotype {
 public:
   typedef Data data_type;
   typedef typename std::shared_ptr<genotype<data_type> > ptr;
-  explicit genotype(const data_type &data) : d_data(data) {}
+  explicit genotype(const data_type &data) : m_data(data) {}
   virtual ~genotype() {}
 
   virtual double fitness() = 0;
@@ -41,13 +41,13 @@ public:
     return (fitness() < g.fitness());
   }
 
-  data_type &get_data() { return d_data; }
-  const data_type &get_data() const { return d_data; }
-  
-  void set_data(const data_type &data) { d_data = data; }
+  data_type &get_data() { return m_data; }
+  const data_type &get_data() const { return m_data; }
+
+  void set_data(const data_type &data) { m_data = data; }
 
 protected:
-  data_type d_data;
+  data_type m_data;
 };
 }
 

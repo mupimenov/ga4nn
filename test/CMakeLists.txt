@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.4)
 project(Test)
 
 include_directories(${Core_SOURCE_DIR})

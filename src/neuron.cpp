@@ -33,40 +33,40 @@ neuron::link::ptr neuron::create_link(neuron::ptr neuron_back,
                                       double weight,
                                       bool constant) {
   link::ptr l(new link(neuron_back, weight, constant));
-  d_link.push_back(l);
+  m_link.push_back(l);
   return l;
 }
 
-size_t neuron::link_count() const { return d_link.size(); }
+size_t neuron::link_count() const { return m_link.size(); }
 
 neuron::link::ptr neuron::get_link(size_t index) const {
-  if (index < 0 || index >= d_link.size())
+  if (index >= m_link.size())
     return link::ptr();
-  return d_link[index];
+  return m_link[index];
 }
 
 void neuron::set_weights(std::vector<double>::const_iterator &first,
                          const std::vector<double>::const_iterator &last) {
-  for (size_t i = 0; (i < d_link.size()) && (first != last); ++i) {
-    if (!d_link[i]->constant)
-      d_link[i]->weight = *first;
+  for (size_t i = 0; (i < m_link.size()) && (first != last); ++i) {
+    if (!m_link[i]->constant)
+      m_link[i]->weight = *first;
     ++first;
   }
 }
 
 std::vector<double> neuron::get_weights() const {
   std::vector<double> weights;
-  for (size_t i = 0; i < d_link.size(); ++i) {
-    if (!d_link[i]->constant)
-      weights.push_back(d_link[i]->weight);
+  for (size_t i = 0; i < m_link.size(); ++i) {
+    if (!m_link[i]->constant)
+      weights.push_back(m_link[i]->weight);
   }
   return weights;
 }
 
 double neuron::forward() {
   double sum = 0.0;
-  for (size_t i = 0; i < d_link.size(); ++i) {
-    const link::ptr &link = d_link[i];
+  for (size_t i = 0; i < m_link.size(); ++i) {
+    const link::ptr &link = m_link[i];
     sum += link->neuron_back->get_output() * link->weight;
   }
   return sum;
