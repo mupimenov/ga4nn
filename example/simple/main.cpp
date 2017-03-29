@@ -35,7 +35,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "genetic.hpp"
 
-#define USE_MUTATION 1
+#define USE_MUTATION 0
 
 class my_data {
 public:
@@ -323,7 +323,7 @@ int main(int argc, char const *argv[]) {
     600);
 
   my_selection::ptr selection(new my_selection);
-  my_crossover::ptr crossover(new my_crossover(0.001, 0.001));
+  my_crossover::ptr crossover(new my_crossover(0.01, 0.01));
   my_mutation::ptr mutation(new my_mutation(5));
   my_stop_function::ptr stop_function(new my_stop_function(100));
 
@@ -337,5 +337,23 @@ int main(int argc, char const *argv[]) {
     my_stop_function
     >(population, selection, crossover, mutation, stop_function);
 
+  /*
+  Fitness = 0.000409668
+
+  Wights:
+  0.0956875
+  -0.431313
+  0.380687
+  -0.223313
+  0.367687
+  -0.818313
+  0.0926875
+  0.545687
+  -0.710312
+  0.517688
+  -0.292312
+  0.858688
+  */
+  
   return 0;
 }
